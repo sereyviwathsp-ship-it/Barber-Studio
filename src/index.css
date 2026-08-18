@@ -1,0 +1,76 @@
+@import 'tailwindcss';
+
+:root {
+  --bg-dark: #0a0a0c;
+  --bg-card: #121216;
+  --bg-card-hover: #18181f;
+  --accent: #8d0000;
+  --accent-glow: rgba(141, 0, 0, 0.15);
+  --text-main: #f4f4f6;
+  --text-muted: #9898a6;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(141, 0, 0, 0.4);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  margin: 0;
+}
+
+.font-serif {
+  font-family: 'Playfair Display', Georgia, serif;
+}
+
+.barber-app {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 20px 60px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Ambient background glows behind the app shell */
+.ambient-glow {
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  filter: blur(100px);
+  z-index: -1;
+  pointer-events: none;
+}
+.glow-1 { top: -50px; left: -50px; background: rgba(141, 0, 0, 0.08); }
+.glow-2 { bottom: 10%; right: -50px; background: rgba(99, 102, 241, 0.05); }
+
+/* Hero gradient blobs */
+.gradient-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+}
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(40px, 30px); }
+}
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, -40px); }
+}
+@keyframes drift-c {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(20px, -20px); }
+}
+
+.animate-drift-a { animation: drift-a 12s ease-in-out infinite; }
+.animate-drift-b { animation: drift-b 14s ease-in-out infinite; }
+.animate-drift-c { animation: drift-c 10s ease-in-out infinite; }

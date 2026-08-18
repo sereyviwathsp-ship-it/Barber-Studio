@@ -1,0 +1,95 @@
+rules_version = '2';
+
+// Barber Studio — Firestore Security Rules
+//
+// Data model:
+//   admins/{uid}        — presence of a doc (any content) marks a user as admin.
+//   users/{uid}          — lightweight profile written on sign-up.
+//   services/{serviceId}  — public menu, admin-managed.
+//   bookings/{bookingId}  — created by the owning user, includes payment sub-object.
+//   questions/{questionId} — public FAQ submissions, answered by admins.
+//
+// Admin gating: a user is an admin iff a document exists at
+// /admins/{request.auth.uid}. Manage this collection from the Firebase
+// console or Admin SDK — never let end users write to it themselves.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ---- admins ----
+    // Nobody may read or write this collection from the client. Manage it
+    // exclusively via the Firebase console or a trusted server (Admin SDK),
+    // which bypasses these rules entirely.
+    match /admins/{uid} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // ---- users ----
+    // Each user can read/write only their own profile doc. Admins can read all.
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create: if isOwner(uid);
+      allow update: if isOwner(uid);
+      allow delete: if false;
+    }
+
+    // ---- services ----
+    // Public read (menu is shown to guests). Only admins can edit the menu.
+    match /services/{serviceId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ---- bookings ----
+    // A signed-in user can create a booking for themselves and read their
+    // own bookings. Admins can read/update/delete any booking (e.g. to mark
+    // the in-store balance as collected, or change status).
+    // Clients may NOT edit payment status/amounts after creation — only
+    // admins can, closing off a path to fake "paid" states.
+    match /bookings/{bookingId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.payment.status in ['deposit_paid', 'pending']
+        && request.resource.data.payment.depositAmount is number
+        && request.resource.data.payment.balanceDueAtStore is number
+        && request.resource.data.payment.totalAmount is number
+        // Enforce the 50/50 split server-side (small epsilon for float rounding).
+        && request.resource.data.payment.depositAmount >= (request.resource.data.payment.totalAmount / 2) - 0.02
+        && request.resource.data.payment.depositAmount <= (request.resource.data.payment.totalAmount / 2) + 0.02;
+
+      // Clients cannot mutate their own booking (no self-service refunds/edits).
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ---- questions ----
+    // Anyone signed in may post a question as themselves; everyone (incl.
+    // guests) can read questions and their public answers. Only admins may
+    // set/edit the `answer` field.
+    match /questions/{questionId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.answer == null;
+
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}
