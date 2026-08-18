@@ -4,6 +4,7 @@ import { signOut } from '../firebase/auth'
 
 const links = [
   { to: '/', label: 'Home' },
+  { to: '/about', label: 'About' },
   { to: '/booking', label: 'Booking' },
   { to: '/faq', label: 'FAQ' },
 ]

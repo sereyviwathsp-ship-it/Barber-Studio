@@ -10,6 +10,7 @@ import AdminOverview from './pages/admin/AdminOverview'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminQuestions from './pages/admin/AdminQuestions'
 import Dashboard from './pages/Dashboard'
+import About from './pages/About'
 
 export default function App() {
   return (
@@ -21,6 +22,7 @@ export default function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/booking" element={<Booking />} />
         <Route path="/faq" element={<FAQ />} />
+        <Route path="/about" element={<About />} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route
